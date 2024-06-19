@@ -22,6 +22,7 @@ public class FruitManager {
 	private int fruitIndex;
 	
 	private boolean isOver;
+	private boolean isHard;
 	
 	private FruitManager() {
 		particles = new ArrayList<>();
@@ -40,6 +41,7 @@ public class FruitManager {
 		fruitIndex = 2;
 		
 		isOver = false;
+		isHard = false;
 	}
 	
 	public static FruitManager getInstance() {
@@ -47,6 +49,13 @@ public class FruitManager {
 	}
 	
 	public void update(double deltaTime, double cursorX) {
+//		Comparator<Fruit> compareByYDescending = new Comparator<Fruit>() {
+//			@Override
+//			public int compare(Fruit o1, Fruit o2) {
+//				return Double.compare(o2.getY(), o1.getY());
+//			}
+//		};
+//		fruits.sort(compareByYDescending);
 		
 		// 1. 과일의 충돌 여부 확인
 		List<Fruit> willFruits = new ArrayList<Fruit>();
@@ -73,6 +82,7 @@ public class FruitManager {
 							createParticles(newFruit.getX(), newFruit.getY(), newFruit.getColor(), newFruit.getGrade());
 							willFruits.add(newFruit);
 							fruitIndex += 1;
+							//makeWave(newFruit);
 						} else {
 							createParticles((fruit1.getX() + fruit2.getX()) / 2.0, (fruit1.getY() + fruit2.getY()) / 2.0,
 									fruit1.getColor(), fruit1.getGrade() + 1);
@@ -138,34 +148,49 @@ public class FruitManager {
 			}
 			reset();
 		}
-		
-		Collections.shuffle(fruits);
 	}
 	
 	public boolean isColliding(Fruit fruit1, Fruit fruit2) {
 		double dx = Math.abs(fruit1.getX() - fruit2.getX());
 		double dy = Math.abs(fruit1.getY() - fruit2.getY());
 		double distance = Math.hypot(dx, dy);
-		return distance <= fruit1.getRadius() + fruit2.getRadius();
+		return distance <= fruit1.getRadius() + fruit2.getRadius() + 0.2;
+	}
+	
+	public boolean isColliding(Fruit fruit1) {
+		for (Fruit fruit2 : fruits) {
+			if (fruit1.getIndex() == fruit2.getIndex()) {
+				continue;
+			}
+			if (isColliding(fruit1, fruit2)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public void throwFruit() {
 		if (isOver) {
 			return;
 		}
-		hangedFruit.setState("NORMAL");
-		fruits.add(hangedFruit);
-		
+		if (hangedFruit != null) {
+			hangedFruit.setState("NORMAL");
+			fruits.add(hangedFruit);
+			hangedFruit = null;
+		}
+	}
+	
+	public void makeNewFruit() {
 		hangedFruit = nextFruit;
 		hangedFruit.setState("HANGED");
 		makeNextFruit();
 	}
 	
 	private void makeNextFruit() {
-		if (maxGrade >= 11) {
+		if (maxGrade >= 11 || isHard) {
 			int newGrade = (int) (Math.random() * 6);
 			int random = (int) (Math.random() * 100);
-			if (random < 3) {
+			if (random < 10) {
 				newGrade = 11;
 			}
 			nextFruit = new Fruit(newGrade, "NEXT", fruitIndex);
@@ -202,7 +227,7 @@ public class FruitManager {
 		double v2x2 = ((v1x * cos + v1y * sin) * cos - (-v2x * sin + v2y * cos) * sin);
 		double v2y2 = ((v1x * cos + v1y * sin) * sin + (-v2x * sin + v2y * cos) * cos);
 		
-		double p = 0.99;
+		double p = 0.97;
 		
 		fruit1.setVelocityX(v1x2 * p);
 		fruit1.setVelocityY(v1y2 * p);
@@ -214,7 +239,7 @@ public class FruitManager {
 //		double a2x = (v2x2 - v2x) / deltaTime * p;
 //		double a2y = (v2y2 - v2y) / deltaTime * p;
 
-//		double r = 0.0;
+//		double r = 0.1;
 //		fruit1.setAccelerationX(fruit1.getAccelerationX() + overlap * cos / 2.0 / deltaTime / deltaTime * r);
 //		fruit1.setAccelerationY(fruit1.getAccelerationY() + overlap * sin / 2.0 / deltaTime / deltaTime * r);
 //		fruit2.setAccelerationX(fruit2.getAccelerationX() + overlap * -cos / 2.0 / deltaTime / deltaTime * r);
@@ -234,7 +259,6 @@ public class FruitManager {
 	public int getSpaceCount() {
 		return this.spaceCount;
 	}
-	
 	
 	public void drawAimLine(GraphicsContext gc, double x) {
 		if (x - hangedFruit.getRadius() < Constants.BOX_LEFT) {
@@ -309,41 +333,45 @@ public class FruitManager {
 			fruit.setVelocityX(fruit.getVelocityX() + (Math.random() - 0.5) * 1.5);
 		}
 	}
-
-//	public void makeWave(Fruit newFruit) {
-//		for (Fruit fruit : fruits) {
-//			if (!isColliding(fruit, newFruit)) {
-//				continue;
-//			}
-//
-//			double x1 = fruit.getX();
-//			double y1 = fruit.getY();
-//
-//			double dx = fruit.getX() - newFruit.getX();
-//			double dy = fruit.getY() - newFruit.getY();
-//
-//			double distance = Math.hypot(dx, dy);
-//			double overlap = fruit.getRadius() + newFruit.getRadius() - distance;
-//
-//			double cos = dx / distance;
-//			double sin = dy / distance;
-//
-//			double velocity = Math.hypot(fruit.getVelocityX(), fruit.getVelocityY());
-//			double acceleration = Math.hypot(fruit.getAccelerationX(), fruit.getAccelerationY() + Constants.GRAVITY);
-//
-//			fruit.setX(fruit.getX() + overlap * cos);
-//			fruit.setY(fruit.getY() + overlap * sin);
-//
-//			double velocity1 = velocity + overlap / fruit.getRadius() * 0.25;
-//
-//			fruit.setVelocityX(velocity1 * cos);
-//			fruit.setVelocityY(velocity1 * sin);
-//			fruit.setAccelerationX(acceleration * cos);
-//			fruit.setAccelerationY(acceleration * sin);
-//			fruit.setX(x1 + overlap * cos * 1.5);
-//			fruit.setY(y1 + overlap * sin * 1.5);
-//
-//			fruit.makeInBox();
-//		}
-//	}
+	
+	public void makeWave(Fruit newFruit) {
+		for (Fruit fruit : fruits) {
+			if (!isColliding(fruit, newFruit)) {
+				continue;
+			}
+			
+			double x1 = fruit.getX();
+			double y1 = fruit.getY();
+			
+			double dx = fruit.getX() - newFruit.getX();
+			double dy = fruit.getY() - newFruit.getY();
+			
+			double distance = Math.hypot(dx, dy);
+			double overlap = fruit.getRadius() + newFruit.getRadius() - distance;
+			
+			double cos = dx / distance;
+			double sin = dy / distance;
+			
+			double velocity = Math.hypot(fruit.getVelocityX(), fruit.getVelocityY());
+			double acceleration = Math.hypot(fruit.getAccelerationX(), fruit.getAccelerationY() + Constants.GRAVITY);
+			
+			fruit.setX(fruit.getX() + overlap * cos);
+			fruit.setY(fruit.getY() + overlap * sin);
+			
+			double velocity1 = velocity + overlap / fruit.getRadius() * 0.25;
+			
+			fruit.setVelocityX(velocity1 * cos);
+			fruit.setVelocityY(velocity1 * sin);
+			fruit.setAccelerationX(acceleration * cos);
+			fruit.setAccelerationY(acceleration * sin);
+			fruit.setX(x1 + overlap * cos * 1.5);
+			fruit.setY(y1 + overlap * sin * 1.5);
+			
+			// fruit.makeInBox();
+		}
+	}
+	
+	public void changeHard() {
+		this.isHard = !this.isHard;
+	}
 }

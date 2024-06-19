@@ -29,7 +29,7 @@ public class Constants {
 	final static public double SCORE_LEFT = 230.0;
 	final static public double SCORE_UPPER = 420.0;
 	
-	final static public double GRAVITY = 0.0008;
+	final static public double GRAVITY = 0.0007;
 	
 	final static public double BUMP = 0.999;
 	

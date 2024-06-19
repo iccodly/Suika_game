@@ -1,7 +1,12 @@
 package com.suikagame.suika_game;
 
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.ArcType;
+
+import java.io.File;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Fruit {
 	
@@ -193,6 +198,13 @@ public class Fruit {
 		gc.fillOval(this.x - this.radius * proportion, this.y - this.radius * proportion,
 				this.radius * 2 * proportion, this.radius * 2 * proportion);
 		//} else {
+
+//		String filePath = "src/main/images/KakaoTalk_20240516_101238536.jpg";
+//
+//		// Load the image
+//		Image image = new Image(new File(filePath).toURI().toString());
+//		drawCircularImage(gc, image, this.x - this.radius, this.y - this.radius, this.radius * 1.0);
+		
 		gc.setStroke(Color.BLACK);
 		gc.setLineWidth(0.05 * this.radius * proportion);
 		gc.strokeOval(this.x - this.radius * proportion, this.y - this.radius * proportion,
@@ -201,7 +213,18 @@ public class Fruit {
 	}
 	
 	public void update(double deltaTime, double cursorX) {
+		makeInBox(deltaTime);
 		if (state.equals("NORMAL")) {
+//			for (int i = 0; i < 100; i++) {
+//				double dx = velocityX * deltaTime / 100.0;
+//				double dy = velocityY * deltaTime / 100.0;
+//				x += dx;
+//				y += dy;
+//				if (FruitManager.getInstance().isColliding(this)) {
+//					break;
+//				}
+//			}
+			
 			x += velocityX * deltaTime + 0.5 * accelerationX * deltaTime * deltaTime;
 			y += velocityY * deltaTime + 0.5 * accelerationY * deltaTime * deltaTime;
 			
@@ -244,6 +267,12 @@ public class Fruit {
 				
 				accelerationX = acceleration * cos;
 				accelerationY = acceleration * sin;
+
+//				velocityX = 0.0;
+//				velocityY = 0.0;
+//
+//				accelerationX = 0.0;
+//				accelerationY = 0.0;
 				return;
 			}
 			
@@ -265,6 +294,12 @@ public class Fruit {
 				
 				accelerationX = acceleration * cos;
 				accelerationY = acceleration * sin;
+
+//				velocityX = 0.0;
+//				velocityY = 0.0;
+//
+//				accelerationX = 0.0;
+//				accelerationY = 0.0;
 				return;
 			}
 			
@@ -327,5 +362,26 @@ public class Fruit {
 	private boolean isRightEdge() {
 		double distance = Math.hypot(x - Constants.BOX_RIGHT, y - Constants.BOX_UPPER);
 		return distance < radius;
+	}
+	
+	private void drawCircularImage(GraphicsContext gc, Image image, double x, double y, double diameter) {
+		// Save the current state of the GraphicsContext
+		gc.save();
+		
+		// Create a circular clip
+		gc.beginPath();
+		gc.arc(x + diameter / 2, y + diameter / 2, diameter / 2, diameter / 2, 0, 360);
+		gc.closePath();
+		gc.clip();
+		
+		// Draw the image inside the circular clip
+		gc.drawImage(image, x, y, diameter, diameter);
+		
+		// Restore the original state of the GraphicsContext
+		gc.restore();
+		
+		// Optionally, draw a circular border around the image
+		gc.setStroke(Color.BLACK);
+		gc.strokeArc(x, y, diameter, diameter, 0, 360, ArcType.OPEN);
 	}
 }
